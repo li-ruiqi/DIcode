@@ -1,33 +1,28 @@
-/*
-* Arduino Wireless Communication Tutorial
-*       Example 1 - Receiver Code
-*                
-* by Dejan Nedelkovski, www.HowToMechatronics.com
-* 
-* Library: TMRh20/RF24, https://github.com/tmrh20/RF24/
-*/
+
 #include <SoftwareSerial.h>
 
 #define ARDUINO_RX 5  //should connect to TX of the Serial MP3 Player module
 #define ARDUINO_TX 6  //connect to RX of the module
 
 SoftwareSerial mp3(ARDUINO_RX, ARDUINO_TX);
-//#define mp3 Serial3    // Connect the MP3 Serial Player to the Arduino MEGA Serial3 (14 TX3 -> RX, 15 RX3 -> TX)
 
-static int8_t Send_buf[8] = {0}; // Buffer for Send commands.  // BETTER LOCALLY
-static uint8_t ansbuf[10] = {0}; // Buffer for the answers.    // BETTER LOCALLY
+static int8_t Send_buf[8] = {0}; 
+static uint8_t ansbuf[10] = {0}; 
 
-String mp3Answer;           // Answer from the MP3.
+static bool g_trigger_stat;
 
-/************ Command byte **************************/
-#define CMD_NEXT_SONG     0X01  // Play next song.
-#define CMD_PREV_SONG     0X02  // Play previous song.
+String mp3Answer;         
+
+/********defines********/
+
+#define CMD_NEXT_SONG     0X01  
+#define CMD_PREV_SONG     0X02  
 #define CMD_PLAY_W_INDEX  0X03
 #define CMD_VOLUME_UP     0X04
 #define CMD_VOLUME_DOWN   0X05
 #define CMD_SET_VOLUME    0X06
 
-#define CMD_SNG_CYCL_PLAY 0X08  // Single Cycle Play.
+#define CMD_SNG_CYCL_PLAY 0X08  
 #define CMD_SEL_DEV       0X09
 #define CMD_SLEEP_MODE    0X0A
 #define CMD_WAKE_UP       0X0B
@@ -38,8 +33,8 @@ String mp3Answer;           // Answer from the MP3.
 
 #define CMD_STOP_PLAY     0X16
 #define CMD_FOLDER_CYCLE  0X17
-#define CMD_SHUFFLE_PLAY  0x18 //
-#define CMD_SET_SNGL_CYCL 0X19 // Set single cycle.
+#define CMD_SHUFFLE_PLAY  0x18 
+#define CMD_SET_SNGL_CYCL 0X19 
 
 #define CMD_SET_DAC 0X1A
 #define DAC_ON  0X00
@@ -53,7 +48,8 @@ String mp3Answer;           // Answer from the MP3.
 #define CMD_QUERY_TOT_TRACKS  0x48
 #define CMD_QUERY_FLDR_COUNT  0x4f
 
-/************ Opitons **************************/
+/************ Opitons ***********/
+
 #define DEV_TF            0X02
 #include <SPI.h>
 #include <nRF24L01.h>
@@ -68,6 +64,7 @@ RF24 radio(7, 8); // CE, CSN
 #define relay 9
 
 const byte address[6] = "00001";
+
 void sendCommand(int8_t command, int16_t dat)
 {
   delay(20);
@@ -88,13 +85,7 @@ void sendCommand(int8_t command, int16_t dat)
   Serial.println();
 }
 
-
-
-/********************************************************************************/
-/*Function: sbyte2hex. Returns a byte data in HEX format.                 */
-/*Parameter:- uint8_t b. Byte to convert to HEX.                                */
-/*Return: String                                                                */
-
+/********stuff*********/
 
 String sbyte2hex(uint8_t b)
 {
@@ -108,13 +99,7 @@ String sbyte2hex(uint8_t b)
   return shex;
 }
 
-
-
-
-/********************************************************************************/
-/*Function: sanswer. Returns a String answer from mp3 UART module.          */
-/*Parameter:- uint8_t b. void.                                                  */
-/*Return: String. If the answer is well formated answer.                        */
+/********sawnser********/
 
 String sanswer(void)
 {
@@ -139,55 +124,90 @@ String sanswer(void)
 
   return "???: " + mp3answer;
 }
+
+/**************code - setup************/
+
+
+void trigger(bool a)
+{
+  if(g_trigger_stat == a)
+    return;
+
+   g_trigger_stat = a;
+  
+  if(a)
+  {
+    digitalWrite(LED, HIGH);
+    digitalWrite(relay, HIGH);
+    sendCommand(CMD_PLAY, 0);
+  }
+  else
+  {
+    digitalWrite(LED, LOW);
+    digitalWrite(relay, LOW);
+    sendCommand(CMD_PAUSE, 0);
+    sendCommand(CMD_RESET, 0);
+  }
+}
 void setup() {
   Serial.begin(9600);
   mp3.begin(9600);
-  delay(500);
-
+  radio.begin();
+  
   sendCommand(CMD_SEL_DEV, DEV_TF);
   delay(500);
   pinMode(LED, OUTPUT);
-  pinMode(button, INPUT);
+  pinMode(button, INPUT_PULLUP);
   pinMode(relay, OUTPUT);
+  
   digitalWrite(LED, LOW);
-  Serial.begin(9600);
-  radio.begin();
+
   radio.openReadingPipe(0, address);
   radio.setPALevel(RF24_PA_MIN);
   radio.startListening();
+  
   display.initialize();
   display.setTextSize(2);
   display.setTextColor(WHITE);
   display.setCursor(0,0);
   display.println("LOADING...");
   display.update();
+  
+  delay(500);
 }
+
 void loop() {
   
-  if(digitalRead(button) == LOW)
+ /* if(digitalRead(button) == LOW)
   { 
-    digitalWrite(LED, HIGH);
-    digitalWrite(relay, HIGH);
-    //sendCommand(CMD_PLAY, 0);
+     trigger(true);
   }
-  else
+  else if(digitalRead(button) == HIGH)
   { 
-  digitalWrite(LED, LOW);
-  digitalWrite(relay, LOW);
- // sendCommand(CMD_PAUSE, 0);
-  delay(500);
-  }
+   trigger(false);
+  }*/
+  
   if (radio.available())
   {
     long distance;
     radio.read(&distance, sizeof(distance));
     Serial.println(distance);
+    
     display.setTextSize(2);
     display.setTextColor(WHITE);
     display.setCursor(0,0);
     display.println(distance);  
     display.update();
     display.clear();
+    
+    if(distance < 5000)
+    {
+      trigger(false);
+    }
+    else
+    {
+      trigger(true);
+    }
   }
   
 }

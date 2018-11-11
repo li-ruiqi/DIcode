@@ -32,22 +32,17 @@ void setup()
   pinMode(trigPin, OUTPUT);
   pinMode(echoPin, INPUT);
   digitalWrite(grnPin, HIGH);
+  
   delay(500);
+
+  digitalWrite(redPin, LOW);
 }
+
 void loop() 
 {
-  digitalWrite(redPin, LOW);
-  digitalWrite(grnPin, LOW);
-  a = -a;
-  if(a == 1)
-  {
-    digitalWrite(grnPin, HIGH);
-  }
-  else if(a == -1)
-  {
-    digitalWrite(grnPin, LOW);
-  }
-  long duration, distance;
+   long duration, distance;
+   int trig = 0;
+   
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
@@ -55,8 +50,36 @@ void loop()
   digitalWrite(trigPin, LOW);
   duration = pulseIn(echoPin, HIGH);
   distance = duration*340/20000;
+    digitalWrite(grnPin, LOW);
+  
+  if(distance > 500)
+  {
+    trig = 0;
+    
+    a = -a;
+    digitalWrite(redPin, LOW);
+    if(a == 1)
+  {
+    digitalWrite(grnPin, HIGH);
+  }
+  else if(a == -1)
+  {
+    digitalWrite(grnPin, LOW);
+  }
+  }
+
+  if(distance < 500)
+  {
+    digitalWrite(redPin, HIGH);
+    digitalWrite(grnPin, LOW);
+
+    trig = 5000;
+  }
+
+  distance += trig;
   radio.write(&distance, sizeof(long));
   Serial.print(distance);
   Serial.println(" cm");
+
   delay(1000);
 }
