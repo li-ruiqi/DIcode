@@ -13,6 +13,12 @@ static bool g_trigger_stat;
 
 String mp3Answer;         
 
+struct dataPack
+{
+  int isActivate;
+  int distance;
+};
+
 /********defines********/
 
 #define CMD_NEXT_SONG     0X01  
@@ -177,36 +183,48 @@ void setup() {
 }
 
 void loop() {
-  
- /* if(digitalRead(button) == LOW)
-  { 
-     trigger(true);
-  }
-  else if(digitalRead(button) == HIGH)
-  { 
-   trigger(false);
-  }*/
+
+  struct dataPack data;
   
   if (radio.available())
   {
-    long distance;
-    radio.read(&distance, sizeof(distance));
-    Serial.println(distance);
+    radio.read(&data, sizeof(data));
+    Serial.println(data.distance);
     
-    display.setTextSize(2);
-    display.setTextColor(WHITE);
-    display.setCursor(0,0);
-    display.println(distance);  
-    display.update();
-    display.clear();
-    
-    if(distance < 5000)
+    if(data.isActivate == -1)
     {
-      trigger(false);
+      trigger(true);
+      display.setTextSize(2);
+      display.setTextColor(WHITE);
+      display.setCursor(0,0);
+      display.println("ACTIVATED");  
+      display.setCursor(0,16);
+      display.print(data.distance);
+      display.println("CM");
+      display.update();
+      display.clear();
     }
     else
     {
-      trigger(true);
+      trigger(false);
+      display.setTextSize(2);
+      display.setTextColor(WHITE);
+      display.setCursor(0,0);
+      display.println("DISTANCE:");  
+      display.setCursor(0,16);
+      display.print(data.distance);
+      display.println("CM");
+      display.update();
+      display.clear();
+
+      if(digitalRead(button) == LOW)
+      { 
+         trigger(true);
+      }
+      else if(digitalRead(button) == HIGH)
+      { 
+         trigger(false);
+      }
     }
   }
   

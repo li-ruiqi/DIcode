@@ -14,6 +14,13 @@
 #define redPin 5
 #define grnPin 6
 int a = 1;
+int keep = 0;
+
+struct dataPack
+{
+  int isActivate;
+  int distance;
+};
 
 RF24 radio(7, 8); // CE, CSN
 const byte address[6] = "00001";
@@ -29,8 +36,6 @@ void setup()
   radio.stopListening();
 
   Serial.begin (9600);
-  pinMode(trigPin, OUTPUT);
-  pinMode(echoPin, INPUT);
   digitalWrite(grnPin, HIGH);
   
   delay(500);
@@ -40,47 +45,42 @@ void setup()
 
 void loop() 
 {
-   long duration, distance;
-   int trig = 0;
- /*  
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-  duration = pulseIn(echoPin, HIGH);
-  distance = duration*340/20000;
-    digitalWrite(grnPin, LOW);*/
+  struct dataPack data;
+  data.isActivate = 1;
 
-  distance = 13597/analogRead(A0);
+  data.distance = 13597/analogRead(A0);
  
-  if(distance > 50)
-  {
-    trig = 0;
-    
+  if(data.distance > 50)
+  {    
     a = -a;
     digitalWrite(redPin, LOW);
     if(a == 1)
-  {
-    digitalWrite(grnPin, HIGH);
-  }
-  else if(a == -1)
-  {
-    digitalWrite(grnPin, LOW);
-  }
+    {
+      digitalWrite(grnPin, HIGH);
+    }
+    else if(a == -1)
+    {
+      digitalWrite(grnPin, LOW);
+    }
+    
+    keep = 0;
   }
 
-  if(distance < 50)
+  if(data.distance < 50)
   {
     digitalWrite(redPin, HIGH);
     digitalWrite(grnPin, LOW);
+    
+    keep += 1;
 
-    trig = 5000;
+    if(keep >= 6)
+    {
+      data.isActivate = -1;
+    }
   }
 
-  distance += trig;
-  radio.write(&distance, sizeof(long));
-  Serial.print(distance);
+  radio.write(&data, sizeof(data));
+  Serial.print(data.distance);
   Serial.println(" cm");
 
   delay(500);
