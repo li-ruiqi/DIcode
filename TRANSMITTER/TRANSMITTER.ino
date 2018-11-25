@@ -42,7 +42,7 @@ void loop()
 {
    long duration, distance;
    int trig = 0;
-   
+ /*  
   digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
   digitalWrite(trigPin, HIGH);
@@ -50,9 +50,11 @@ void loop()
   digitalWrite(trigPin, LOW);
   duration = pulseIn(echoPin, HIGH);
   distance = duration*340/20000;
-    digitalWrite(grnPin, LOW);
-  
-  if(distance > 500)
+    digitalWrite(grnPin, LOW);*/
+
+  distance = 13597/analogRead(A0);
+ 
+  if(distance > 50)
   {
     trig = 0;
     
@@ -68,7 +70,7 @@ void loop()
   }
   }
 
-  if(distance < 500)
+  if(distance < 50)
   {
     digitalWrite(redPin, HIGH);
     digitalWrite(grnPin, LOW);
@@ -81,5 +83,5 @@ void loop()
   Serial.print(distance);
   Serial.println(" cm");
 
-  delay(1000);
+  delay(500);
 }
