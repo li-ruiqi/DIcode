@@ -17,7 +17,10 @@ struct dataPack
 {
   int isActivate;
   int distance;
+  int distance1;
 };
+struct dataPack data;
+
 
 /********defines********/
 
@@ -69,7 +72,7 @@ RF24 radio(7, 8); // CE, CSN
 #define button 4
 #define relay 9
 
-const byte address[6] = "00001";
+const byte address[6] = "23470";
 
 void sendCommand(int8_t command, int16_t dat)
 {
@@ -156,6 +159,7 @@ void trigger(bool a)
   }
 }
 void setup() {
+  data.isActivate = 0;
   Serial.begin(9600);
   mp3.begin(9600);
   radio.begin();
@@ -181,10 +185,7 @@ void setup() {
   
   delay(500);
 }
-
 void loop() {
-
-  struct dataPack data;
   
   if (radio.available())
   {
@@ -201,6 +202,9 @@ void loop() {
       display.setCursor(0,16);
       display.print(data.distance);
       display.println("CM");
+      display.setCursor(0,32);
+      display.print(data.distance1);
+      display.println("CM");
       display.update();
       display.clear();
     }
@@ -214,18 +218,23 @@ void loop() {
       display.setCursor(0,16);
       display.print(data.distance);
       display.println("CM");
+      display.setCursor(0,32);
+      display.print(data.distance1);
+      display.println("CM");
+      display.update();
       display.update();
       display.clear();
-
-      if(digitalRead(button) == LOW)
-      { 
-         trigger(true);
-      }
-      else if(digitalRead(button) == HIGH)
-      { 
-         trigger(false);
-      }
     }
+    
+  }
+  
+  if(digitalRead(button) == LOW || data.isActivate == -1)
+  { 
+    trigger(true);
+  }
+  else
+  { 
+     trigger(false);
   }
   
 }

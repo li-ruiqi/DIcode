@@ -20,10 +20,11 @@ struct dataPack
 {
   int isActivate;
   int distance;
+  int distance1;
 };
 
 RF24 radio(7, 8); // CE, CSN
-const byte address[6] = "00001";
+const byte address[6] = "23470";
 void setup()
 {
   pinMode(redPin, OUTPUT);
@@ -47,8 +48,12 @@ void loop()
 {
   struct dataPack data;
   data.isActivate = 1;
-
-  data.distance = 13597/analogRead(A0);
+  int val = analogRead(A0);
+  if(val< 20)
+    val = 20;
+  data.distance1 = val;
+  
+  data.distance = 13597/val;
  
   if(data.distance > 50)
   {    
