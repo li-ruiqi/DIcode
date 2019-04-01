@@ -20,6 +20,8 @@ struct dataPack
   int distance1;
 };
 struct dataPack data;
+bool temmie = false;
+int sans = 0;
 
 
 /********defines********/
@@ -76,15 +78,15 @@ RF24 radio(7, 8); // CE, CSN
 
 const byte address[6] = "23470";
 
-void stepMove(int a)
+void stepMove(int a, bool dir)
 {
-  digitalWrite(STEPDIR, LOW);
+  digitalWrite(STEPDIR, dir);
   for(int i = 0; i < a; i++)
   {
     digitalWrite(STEP, HIGH);
-    delayMicroseconds(1000);
+    delayMicroseconds(500);
     digitalWrite(STEP, LOW);
-    delayMicroseconds(2000);
+    delayMicroseconds(500);
   }
 }
 
@@ -150,31 +152,38 @@ String sanswer(void)
 
 /**************code - setup************/
 
-
-void trigger(bool a)
+void stickHeadUp()
 {
-  
-  if(g_trigger_stat == a)
-    return;
+  stepMove(700, LOW);
 
-   g_trigger_stat = a;
-  
-  if(a)
-  {
-    stepMove(10);
-    digitalWrite(LED, HIGH);
-    digitalWrite(relay, HIGH);
-    sendCommand(CMD_PLAY, 0);
-    stepMove(100);
-  }
-  else
-  {
-    digitalWrite(LED, LOW);
-    digitalWrite(relay, LOW);
-    sendCommand(CMD_PAUSE, 0);
-    sendCommand(CMD_RESET, 0);
-  }
+  digitalWrite(A2, HIGH);
+  delay(200);
+  digitalWrite(A2, LOW);
+  delay(200);
+  digitalWrite(A2, HIGH);
+  delay(200);
+  digitalWrite(A2, LOW);
+  delay(200);
+  digitalWrite(A2, HIGH);
+  delay(200);
+  digitalWrite(A2, LOW);
+  delay(200);
+  digitalWrite(A2, HIGH);
+  delay(200);
+  digitalWrite(A2, LOW);
+  delay(200);
+  digitalWrite(A2, HIGH);
+  delay(200);
+  digitalWrite(A2, LOW);
+  delay(200);
+  digitalWrite(A2, HIGH);
+  delay(200);
+  digitalWrite(A2, LOW);
+  delay(200);
+
+  stepMove(700, HIGH);
 }
+
 void setup() {
   data.isActivate = 0;
   Serial.begin(9600);
@@ -188,6 +197,7 @@ void setup() {
   pinMode(relay, OUTPUT);
   pinMode(STEPDIR, OUTPUT);
   pinMode(STEP, OUTPUT);
+  pinMode(A2, OUTPUT);
   
   digitalWrite(LED, LOW);
 
@@ -195,65 +205,61 @@ void setup() {
   radio.setPALevel(RF24_PA_MIN);
   radio.startListening();
   
-  display.initialize();
-  display.setTextSize(2);
-  display.setTextColor(WHITE);
-  display.setCursor(0,0);
-  display.println("LOADING...");
-  display.update();
-  
   delay(500);
+
+  stepMove(500, LOW);
+
+  digitalWrite(A2, HIGH);
+  delay(200);
+  digitalWrite(A2, LOW);
+  delay(200);
+  digitalWrite(A2, HIGH);
+  delay(200);
+  digitalWrite(A2, LOW);
+  delay(200);
+  digitalWrite(A2, HIGH);
+  delay(200);
+  digitalWrite(A2, LOW);
+  delay(200);
+
+  stepMove(500, HIGH);  
 }
 void loop() {
-  
+
   if (radio.available())
   {
     radio.read(&data, sizeof(data));
     Serial.println(data.distance);
-    
-    if(data.isActivate == -1)
+    if(!temmie)
     {
-      trigger(true);
-      display.setTextSize(2);
-      display.setTextColor(WHITE);
-      display.setCursor(0,0);
-      display.println("ACTIVATED");  
-      display.setCursor(0,16);
-      display.print(data.distance);
-      display.println("CM");
-      display.setCursor(0,32);
-      display.print(data.distance1);
-      display.println("CM");
-      display.update();
-      display.clear();
+      stepMove(1400, LOW);
+      temmie = true;
     }
-    else
+    if(data.isActivate == -1 && sans < 5)
     {
-      trigger(false);
-      display.setTextSize(2);
-      display.setTextColor(WHITE);
-      display.setCursor(0,0);
-      display.println("DISTANCE:");  
-      display.setCursor(0,16);
-      display.print(data.distance);
-      display.println("CM");
-      display.setCursor(0,32);
-      display.print(data.distance1);
-      display.println("CM");
-      display.update();
-      display.update();
-      display.clear();
+      sans++;
     }
-    
+    if(sans == 5)
+    {
+      delay(5000);
+      //play sound
+      stepMove(1400, HIGH);
+      
+      delay(4000);
+      stickHeadUp();
+      delay(4000);
+      stickHeadUp();
+      delay(4000);
+      stickHeadUp();
+
+      delay(4000);
+     
+      stepMove(1400, LOW);
+
+      digitalWrite(A2, HIGH);
+      
+      while(true);
+    }
   }
-  
-  if(digitalRead(button) == LOW || data.isActivate == -1)
-  { 
-    trigger(true);
-  }
-  else
-  { 
-     trigger(false);
-  }
-  
+ 
 }
